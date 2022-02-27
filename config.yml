@@ -1,0 +1,10 @@
+AWS:
+  DEBUG: true
+  ENVIRONMENT: test
+  marker: data/mindtrailstest/MT_QR19/87b2fdc3-d02c-457c-96fc-fe03d6f09ea4.json.gz
+DATABASE:
+  db_host: 173.254.28.29
+  db_name: boukhech_sensus
+  db_password: uvasensusadmin
+  db_port: 3306
+  db_user: boukhech_dashb
