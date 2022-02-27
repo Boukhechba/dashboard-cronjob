@@ -4,13 +4,8 @@
 import os
 import boto3
 import time
-#import logging
-#import io
-#import os
-
 from datetime import datetime,timedelta
 from botocore.client import Config
-#import dateutil
 import pandas as pd
 import json 
 import pytz
@@ -18,8 +13,6 @@ import gzip
 from collections import defaultdict
 import yaml
 from smart_open import open
-#import s3fs
-import inspect
 from database import Database
 
 
@@ -31,7 +24,7 @@ def read_yaml(file_path):
 
 config=read_yaml(os.path.join(os.path.dirname(__file__), "config.yml"))
 
-# construct the argument parse and parse the arguments
+# Fetch parameters from the config file
 db_host     = config['DATABASE']['db_host']
 db_port     = config['DATABASE']['db_port']
 db_user     = config['DATABASE']['db_user']
@@ -40,12 +33,9 @@ db_name = config['DATABASE']['db_name']
 marker = config['AWS']['marker']
 complete_data = defaultdict(list)
 
-
-
 #################################################################
 # Supporting methods                                            #
 #################################################################
-
 
 def json_processor(f,study):
     lines = f.readlines()
@@ -112,8 +102,6 @@ def count_probes(key,data):
     if not data.empty:                    
         try:     
             data['datum']=key
-#            print(key)
-            #data=pd.concat([data,d], ignore_index=True)
             grouped1 = pd.DataFrame(data.Id.groupby([data.datum,(data.Timestamp.dropna().str[:13].replace("T", " ")),data.ParticipantId,data.DeviceId,data.OperatingSystem]).count()).reset_index()
             if 'ScriptState'==key :
                 subdata=data.loc[data['datum']== "ScriptState"]
@@ -132,8 +120,8 @@ def count_probes(key,data):
 # Handler                                                       #
 #################################################################
 #timeTH = datetime.utcnow()- timedelta(minutes=5)
-#timeTH = datetime.utcnow()- timedelta(hours=24)
-timeTH = datetime.utcnow()- timedelta(days=90)
+timeTH = datetime.utcnow()- timedelta(hours=24)
+#timeTH = datetime.utcnow()- timedelta(days=90)
 
 absolute_start_time = time.time()
 
@@ -147,20 +135,12 @@ errorList= []
 listdate =[]
 paginator = s3.get_paginator( "list_objects" )
 
-
-#marker="data/2019-06-17/RPN6942_ScreenDatum_1560763733034-1560763733034.csv.gz"
-
 allowedProbesList=["ScriptStateDatum"]
-#allowedProbesList=["HeartbeatDatum"]
 
 if(str(marker)=="None"):
     page_iterator = paginator.paginate( Bucket = AWS_S3_BUCKET, Prefix = "data/")
 else:
     page_iterator = paginator.paginate( Bucket = AWS_S3_BUCKET, Prefix = "data/",PaginationConfig={'StartingToken': marker})
-#
-
-
-
 
 i=0
 y=0
@@ -190,11 +170,9 @@ for page in page_iterator:
                 except Exception as e: 
                     print(e) 
                 i=i+1
-
                 
 print("---  Data processing finished. Inserting data in the database...  ---")
-
-              
+       
 for probe,study in complete_data:
     print("---  Inserting data into "+study+ "->"+ probe)
     data=pd.DataFrame(complete_data[probe,study])
