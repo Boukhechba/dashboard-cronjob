@@ -120,8 +120,8 @@ def count_probes(key,data):
 # Handler                                                       #
 #################################################################
 #timeTH = datetime.utcnow()- timedelta(minutes=5)
-timeTH = datetime.utcnow()- timedelta(hours=24)
-#timeTH = datetime.utcnow()- timedelta(days=90)
+#timeTH = datetime.utcnow()- timedelta(hours=24)
+timeTH = datetime.utcnow()- timedelta(days=2)
 
 absolute_start_time = time.time()
 
@@ -138,6 +138,7 @@ paginator = s3.get_paginator( "list_objects" )
 allowedProbesList=["ScriptStateDatum"]
 
 if(str(marker)=="None"):
+    print("No marker found")
     page_iterator = paginator.paginate( Bucket = AWS_S3_BUCKET, Prefix = "data/")
 else:
     page_iterator = paginator.paginate( Bucket = AWS_S3_BUCKET, Prefix = "data/",PaginationConfig={'StartingToken': marker})
@@ -182,12 +183,13 @@ print("---  Storing AWs marker")
 
 config['AWS']['marker']=marker
 
-try:
-    with open(os.path.join(os.path.dirname(__file__), "config.yml"), 'w') as file:
-        documents = yaml.dump(config, file)
-except Exception as e: 
-    print(e) 
+#try:
+#    with open(os.path.join(os.path.dirname(__file__), "config.yml"), 'w') as file:
+#        documents = yaml.dump(config, file)
+#except Exception as e: 
+#    print(e) 
        
 print("--- Done ! "+str(i)+" files have been processed.")
+
 
 
