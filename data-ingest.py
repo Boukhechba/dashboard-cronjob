@@ -31,6 +31,8 @@ db_user     = config['DATABASE']['db_user']
 db_password = config['DATABASE']['db_password']
 db_name = config['DATABASE']['db_name']
 marker = config['AWS']['marker']
+last_time=config['AWS']['last_time']
+
 complete_data = defaultdict(list)
 
 #################################################################
@@ -143,6 +145,12 @@ if(str(marker)=="None"):
 else:
     page_iterator = paginator.paginate( Bucket = AWS_S3_BUCKET, Prefix = "data/",PaginationConfig={'StartingToken': marker})
 
+
+if (str(last_time)=="None"):
+    last_time=datetime.min.replace(tzinfo=pytz.utc)
+else:
+    last_time=last_time.replace(tzinfo=pytz.utc)
+
 i=0
 y=0
 frame=pd.DataFrame()
@@ -151,6 +159,7 @@ time = timeTH.replace(tzinfo=pytz.utc)
 
 print("---  Fetching data from S3..")
 print("---  Starting from the following marker: "+ str(marker))
+print("---  Starting from the following time marker: "+ str(last_time))
 
 for page in page_iterator:
     if "Contents" in page:
@@ -158,7 +167,7 @@ for page in page_iterator:
         for obj in page["Contents"]:
             #Check if the object was uploaded within our targeted time window
 #            if(obj['LastModified']>time and obj['Size']>0 and datum in allowedProbesList):         
-            if(obj['LastModified']>time and obj['Size']>0):
+            if(obj['LastModified']>last_time and obj['Size']>0):
                 name=obj['Key'].split("/")[1]
                 try:
                     response = s3.get_object(Bucket=AWS_S3_BUCKET, Key=obj['Key'])
@@ -171,8 +180,16 @@ for page in page_iterator:
                 except Exception as e: 
                     print(e) 
                 i=i+1
-                
-print("---  Data processing finished. Inserting data in the database...  ---")
+                y=y+1
+                new_last_time= obj['LastModified']
+                if (i>=1000):
+                    print("---  Inserting data in the database to free up memory ---")
+                    for probe,study in complete_data:
+                        data=pd.DataFrame(complete_data[probe,study])
+                        push_to_db(count_probes(probe,data),study)
+                    complete_data = defaultdict(list)
+                    i=0
+                    
        
 for probe,study in complete_data:
     print("---  Inserting data into "+study+ "->"+ probe)
@@ -181,15 +198,18 @@ for probe,study in complete_data:
     
 print("---  Storing AWs marker")
 
-config['AWS']['marker']=marker
+#config['AWS']['marker']=marker
 
-#try:
-#    with open(os.path.join(os.path.dirname(__file__), "config.yml"), 'w') as file:
-#        documents = yaml.dump(config, file)
-#except Exception as e: 
-#    print(e) 
+print("---  Storing the time marker")
+
+config['AWS']['last_time']=new_last_time
+try:
+    with open(os.path.join(os.path.dirname(__file__), "config.yml"), 'w') as file:
+        documents = yaml.dump(config, file)
+except Exception as e: 
+    print(e) 
        
-print("--- Done ! "+str(i)+" files have been processed.")
+print("--- Done ! "+str(y)+" files have been processed.")
 
 
 
