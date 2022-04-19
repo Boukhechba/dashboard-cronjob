@@ -109,7 +109,8 @@ def count_probes(key,data):
                 subdata=data.loc[data['datum']== "ScriptState"]
                 grouped=pd.DataFrame(subdata.Id.groupby([subdata.State,(subdata.Timestamp.dropna().str[:13].replace("T", " ")),subdata.ParticipantId,subdata.DeviceId,subdata.OperatingSystem]).count()).reset_index()      
                 grouped=grouped.rename(columns={'State': 'datum'})
-                grouped.datum="ScriptDatum_"+str(grouped.datum)
+                grouped.datum=grouped.datum.astype(str)
+                grouped.datum="ScriptDatum_"+grouped.datum
                 frame=pd.concat([frame, grouped, grouped1], ignore_index=True)
             else:
                 frame=pd.concat([frame, grouped1], ignore_index=True)

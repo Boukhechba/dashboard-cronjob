@@ -1,7 +1,7 @@
 AWS:
   DEBUG: true
   ENVIRONMENT: test
-  last_time: 2022-03-09 23:46:03+00:00
+  last_time: 
   marker: null
 DATABASE:
   db_host: 173.254.28.29
