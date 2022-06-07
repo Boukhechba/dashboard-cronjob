@@ -1,11 +1,1 @@
-AWS:
-  DEBUG: true
-  ENVIRONMENT: test
-  last_time: 
-  marker: null
-DATABASE:
-  db_host: 173.254.28.29
-  db_name: boukhech_sensus
-  db_password: uvasensusadmin
-  db_port: 3306
-  db_user: boukhech_dashb
+
